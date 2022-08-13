@@ -37,4 +37,17 @@ export default class Candle {
       this.high = value;
     }
   }
+
+  closeCandle() {
+    if (this.values.length > 0) {
+      this.close = this.values[this.values.length - 1];
+      this.finalDateTime = new Date();
+
+      if (this.open > this.close) {
+        this.color = CandleColor.RED;
+      } else if (this.close > this.open) {
+        this.color = CandleColor.GREEN;
+      }
+    }
+  }
 }
