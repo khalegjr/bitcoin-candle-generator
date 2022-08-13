@@ -50,4 +50,9 @@ export default class Candle {
       }
     }
   }
+
+  toSimpleObject() {
+    const { values, ...obj } = this;
+    return obj;
+  }
 }
