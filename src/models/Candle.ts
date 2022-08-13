@@ -21,4 +21,20 @@ export default class Candle {
     this.values = [];
     this.color = CandleColor.UNDETERMINED;
   }
+
+  addValue(value: number) {
+    this.values.push(value);
+
+    if (this.values.length == 1) {
+      this.open = value;
+    }
+
+    if (this.low > value) {
+      this.low = value;
+    }
+
+    if (this.high < value) {
+      this.high = value;
+    }
+  }
 }
