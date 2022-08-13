@@ -1,3 +1,4 @@
+import { createMessageChannel } from "./messages/messageChannel";
 import { config } from "dotenv";
 import axios from "axios";
 import Period from "./enums/Period";
@@ -14,26 +15,39 @@ const readMarktPrice = async (): Promise<number> => {
 };
 
 const generateCandles = async () => {
-  while (true) {
-    // Para saber quantas leituras tem que fazer para gerar uma candle de 5 minutos com leitura de 10 em 10 segundos
-    const loopTimes = Period.ONE_MINUTE / Period.TEN_SECONDS;
-    const candle = new Candle("BTC", new Date());
+  const messageChannel = await createMessageChannel();
 
-    console.log("------------------------");
-    console.log("Generating new candle");
+  if (messageChannel) {
+    while (true) {
+      // Para saber quantas leituras tem que fazer para gerar uma candle de 5 minutos com leitura de 10 em 10 segundos
+      const loopTimes = Period.FIVE_MINUTES / Period.TEN_SECONDS;
+      const candle = new Candle("BTC", new Date());
 
-    for (let i = 0; i < loopTimes; i++) {
-      const price = await readMarktPrice();
-      candle.addValue(price);
-      console.log(`Market price #${i + 1} of ${loopTimes}`);
+      console.log("------------------------");
+      console.log("Generating new candle");
 
-      // faz o script esperar por 10 segundos
-      await new Promise((r) => setTimeout(r, Period.TEN_SECONDS));
+      for (let i = 0; i < loopTimes; i++) {
+        const price = await readMarktPrice();
+        candle.addValue(price);
+        console.log(`Market price #${i + 1} of ${loopTimes}`);
+
+        // faz o script esperar por 10 segundos
+        await new Promise((r) => setTimeout(r, Period.TEN_SECONDS));
+      }
+
+      candle.closeCandle();
+      console.log("Candle close");
+
+      const candleObj = candle.toSimpleObject();
+      console.log(candleObj);
+
+      const candleJson = JSON.stringify(candleObj);
+      messageChannel.sendToQueue(
+        process.env.QUEUE_NAME,
+        Buffer.from(candleJson)
+      );
+      console.log("Candle enqueued");
     }
-
-    candle.closeCandle();
-    console.log("Candle close");
-    console.log(candle.toSimpleObject());
   }
 };
 
